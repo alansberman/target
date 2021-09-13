@@ -5,17 +5,16 @@ import useAllWords from "../hooks/useAllWords";
 import Guess from "./Guess";
 import Square from "./Square";
 const Game = ({ word }) => {
-  const [targetWord, setTargetWord] = useState(word);
   const [correctWords, setCorrectWords] = useState([]);
-  const [randomSeed, setRandomSeed] = useState(0);
+
   const wordList = useAllWords();
 
   // thanks to https://stackoverflow.com/questions/3943772/how-do-i-shuffle-the-characters-in-a-string-in-javascript
   const shuffleWord = () => {
-    let w = targetWord.split("");
+    let w = word.split("");
 
     for (let i = w.length - 1; i > 0; i--) {
-      let j = Math.floor(randomSeed * (i + 1));
+      let j = Math.floor(Math.random() * (i + 1));
       let tmp = w[i];
       w[i] = w[j];
       w[j] = tmp;
@@ -23,32 +22,20 @@ const Game = ({ word }) => {
     return w;
   };
 
-  const [shuffledWord, setShuffleWord] = useState(shuffleWord());
-
-  const [firstThree, setFirstThree] = useState(shuffledWord.slice(0, 3));
-  const [middleThree, setMiddleThree] = useState(shuffledWord.slice(3, 6));
-  const [centreLetter, setCentreLetter] = useState(middleThree[1]);
-  const [lastThree, setLastThree] = useState(shuffledWord.slice(6, 9));
+  const [shuffledWord, setShuffledWord] = useState(shuffleWord());
+  const [centreLetter, setCentreLetter] = useState(shuffledWord[4]);
 
   useEffect(() => {
-    setTargetWord(word);
-  }, [word])
+    setShuffledWord(shuffleWord());
+  }, [word]);
 
   useEffect(() => {
-    setRandomSeed(Math.random());
-  }, [targetWord])
-
-  useEffect(() => {
-    setShuffleWord(shuffleWord());
-  }, [randomSeed])
-
-  useEffect(() => {
-    setFirstThree(shuffledWord.slice(0, 3));
-    setMiddleThree(shuffledWord.slice(3, 6));
-    setLastThree(shuffledWord.slice(6, 9));
-    setCentreLetter(middleThree[1]);
-    setCorrectWords([]);
+    setCentreLetter(shuffledWord[4]);
   }, [shuffledWord]);
+
+  useEffect(() => {
+    setPossibleWordList(possibleWords());
+  }, [word]);
 
   const possibleWords = () => {
     // thanks to https://stackoverflow.com/questions/5667888/counting-the-occurrences-frequency-of-array-elements
@@ -57,29 +44,31 @@ const Game = ({ word }) => {
       return acc[curr] ? ++acc[curr] : (acc[curr] = 1), acc;
     }, {});
 
-    let eligibleWords = wordList.filter(item => {
-      for (let character of item) {
-        if (!targetWord.includes(character)) {
-          return false;
+    let eligibleWords = wordList
+      .filter(item => {
+        for (let character of item) {
+          if (!word.includes(character)) {
+            return false;
+          }
         }
-      }
-      return item.includes(middleThree[1]);
-    });
-
-    eligibleWords = eligibleWords.filter(item => {
-      const wordCharCounts = item.split("").reduce(function (acc, curr) {
-        return acc[curr] ? ++acc[curr] : (acc[curr] = 1), acc;
-      }, {});
-      for (const [key, value] of Object.entries(wordCharCounts)) {
-        if (value > targetWordCharCounts[key]) {
-          return false;
+        return item.includes(shuffledWord[4]);
+      })
+      .filter(item => {
+        const wordCharCounts = item.split("").reduce(function (acc, curr) {
+          return acc[curr] ? ++acc[curr] : (acc[curr] = 1), acc;
+        }, {});
+        for (const [key, value] of Object.entries(wordCharCounts)) {
+          if (value > targetWordCharCounts[key]) {
+            return false;
+          }
         }
-      }
-      return true;
-    });
+        return true;
+      });
 
     return eligibleWords;
   };
+
+  const [possibleWordList, setPossibleWordList] = useState(possibleWords());
 
   function handleChildClick(word) {
     setCorrectWords([...correctWords, word]);
@@ -100,38 +89,17 @@ const Game = ({ word }) => {
         <div className="col"></div>
       </div>
       <div className="row">
-        {firstThree.map((item, index) => {
+        {shuffledWord.map((item, index) => {
           return (
-            <div className="col" key={`${item}${index}`}>
-              <Square isCenterLetter={false} letter={item} />
-            </div>
-          );
-        })}
-      </div>
-      <div className="row">
-        {middleThree.map((item, index) => {
-          return (
-            <div className="col" key={`${item}${index}`}>
-              <Square
-                isCenterLetter={index === 1 ? true : false}
-                letter={item}
-              />
-            </div>
-          );
-        })}
-      </div>
-      <div className="row">
-        {lastThree.map((item, index) => {
-          return (
-            <div className="col" key={`${item}${index}`}>
-              <Square isCenterLetter={false} letter={item} />
+            <div className="col-4" key={`${item}${index}`}>
+              <Square isCenterLetter={index === 4} letter={item} />
             </div>
           );
         })}
       </div>
       <Guess
-        wordList={possibleWords}
-        targetWord={targetWord}
+        word={word}
+        wordList={possibleWordList}
         centre={centreLetter}
         min={minScore}
         avg={avgScore}

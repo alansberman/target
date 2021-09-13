@@ -3,7 +3,7 @@ import { useState } from "react";
 import GuessesList from "./GuessesList";
 
 const Guess = ({
-  targetWord,
+  word,
   wordList,
   centre,
   min,
@@ -12,7 +12,6 @@ const Guess = ({
   onChildClick,
   correctWords
 }) => {
-  const [target] = useState(targetWord);
   const [possibleWordList] = useState(wordList);
 
   const [minScore] = useState(min);
@@ -24,7 +23,7 @@ const Guess = ({
 
   const [error, setError] = useState(null);
 
-  const targetWordCharCounts = target.split("").reduce(function (acc, curr) {
+  const targetWordCharCounts = word.split("").reduce(function (acc, curr) {
     return acc[curr] ? ++acc[curr] : (acc[curr] = 1), acc;
   }, {});
 
@@ -42,13 +41,12 @@ const Guess = ({
       return false;
     }
     if (!guessInput.includes(centreLetter)) {
-      console.log(guessInput, centreLetter);
       setError("Words must contain the centre letter");
       return false;
     }
 
     for (let character of guessInput) {
-      if (!target.includes(character)) {
+      if (!word.includes(character)) {
         setError("Words must only contain letters in the grid");
         return false;
       }
