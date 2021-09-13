@@ -6,7 +6,7 @@ import Game from "./Game";
 
 const Overview = () => {
   const [wordSet] = useState(false);
-  const [word, setWord] = useState("");
+  const [word, setWord] = useState(useChosenWordSimple());
   const [gameInProgress, setGameInProgress] = useState(false);
 
   const newGame = () => {

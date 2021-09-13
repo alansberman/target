@@ -31,17 +31,24 @@ const Game = ({ word }) => {
   const [lastThree, setLastThree] = useState(shuffledWord.slice(6, 9));
 
   useEffect(() => {
-    if (targetWord !== word) {
-      setTargetWord(word);
-      setRandomSeed(Math.random());
-      setShuffleWord(shuffleWord());
-      setFirstThree(() => shuffledWord.slice(0, 3));
-      setMiddleThree(() => shuffledWord.slice(3, 6));
-      setLastThree(() => shuffledWord.slice(6, 9));
-      setCentreLetter(() => middleThree[1]);
-      setCorrectWords(() => []);
-    }
-  }, [word]);
+    setTargetWord(word);
+  }, [word])
+
+  useEffect(() => {
+    setRandomSeed(Math.random());
+  }, [targetWord])
+
+  useEffect(() => {
+    setShuffleWord(shuffleWord());
+  }, [randomSeed])
+
+  useEffect(() => {
+    setFirstThree(shuffledWord.slice(0, 3));
+    setMiddleThree(shuffledWord.slice(3, 6));
+    setLastThree(shuffledWord.slice(6, 9));
+    setCentreLetter(middleThree[1]);
+    setCorrectWords([]);
+  }, [shuffledWord]);
 
   const possibleWords = () => {
     // thanks to https://stackoverflow.com/questions/5667888/counting-the-occurrences-frequency-of-array-elements
