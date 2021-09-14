@@ -1,80 +1,52 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+
+import { possibleWords, shuffleWord } from "../helpers/wordFuncs";
 
 import useAllWords from "../hooks/useAllWords";
 import Guess from "./Guess";
 import Square from "./Square";
 const Game = ({ word }) => {
+  const isMounted = useRef(false);
   const [correctWords, setCorrectWords] = useState([]);
-
   const wordList = useAllWords();
 
-  // thanks to https://stackoverflow.com/questions/3943772/how-do-i-shuffle-the-characters-in-a-string-in-javascript
-  const shuffleWord = () => {
-    let w = word.split("");
-
-    for (let i = w.length - 1; i > 0; i--) {
-      let j = Math.floor(Math.random() * (i + 1));
-      let tmp = w[i];
-      w[i] = w[j];
-      w[j] = tmp;
-    }
-    return w;
-  };
-
-  const [shuffledWord, setShuffledWord] = useState(shuffleWord());
+  const [shuffledWord, setShuffledWord] = useState(shuffleWord(word));
   const [centreLetter, setCentreLetter] = useState(shuffledWord[4]);
 
   useEffect(() => {
-    setShuffledWord(shuffleWord());
+    if (!isMounted.current) {
+      isMounted.current = true;
+    } else {
+      setShuffledWord(shuffleWord(word));
+    }
   }, [word]);
 
-  useEffect(() => {
-    setCentreLetter(shuffledWord[4]);
-  }, [shuffledWord]);
-
-  useEffect(() => {
-    setPossibleWordList(possibleWords());
-  }, [word]);
-
-  const possibleWords = () => {
-    // thanks to https://stackoverflow.com/questions/5667888/counting-the-occurrences-frequency-of-array-elements
-
-    const targetWordCharCounts = shuffledWord.reduce(function (acc, curr) {
-      return acc[curr] ? ++acc[curr] : (acc[curr] = 1), acc;
-    }, {});
-
-    let eligibleWords = wordList
-      .filter(item => {
-        for (let character of item) {
-          if (!word.includes(character)) {
-            return false;
-          }
-        }
-        return item.includes(shuffledWord[4]);
-      })
-      .filter(item => {
-        const wordCharCounts = item.split("").reduce(function (acc, curr) {
-          return acc[curr] ? ++acc[curr] : (acc[curr] = 1), acc;
-        }, {});
-        for (const [key, value] of Object.entries(wordCharCounts)) {
-          if (value > targetWordCharCounts[key]) {
-            return false;
-          }
-        }
-        return true;
-      });
-
-    return eligibleWords;
-  };
-
-  const [possibleWordList, setPossibleWordList] = useState(possibleWords());
+  const [possibleWordList, setPossibleWordList] = useState(
+    possibleWords(shuffledWord, wordList)
+  );
 
   function handleChildClick(word) {
     setCorrectWords([...correctWords, word]);
   }
 
-  const possibleWordCount = possibleWords().length;
+  useEffect(() => {
+    if (!isMounted.current) {
+      isMounted.current = true;
+    } else {
+      setPossibleWordList(possibleWords(shuffledWord, wordList));
+    }
+  }, [shuffledWord]);
+
+  useEffect(() => {
+    if (!isMounted.current) {
+      isMounted.current = true;
+    } else {
+      setCentreLetter(shuffledWord[4]);
+    }
+  }, [shuffledWord]);
+
+  const possibleWordCount = possibleWordList.length;
   const minScore = Math.floor(possibleWordCount * 0.2);
   const avgScore = Math.floor(possibleWordCount * 0.25);
   const highScore = Math.floor(possibleWordCount * 0.4);
