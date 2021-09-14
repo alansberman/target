@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import GuessesList from "./GuessesList";
 
 const Guess = ({
@@ -12,14 +12,16 @@ const Guess = ({
   onChildClick,
   correctWords
 }) => {
-  const [possibleWordList] = useState(wordList);
-
-  const [minScore] = useState(min);
-  const [averageScore] = useState(avg);
-  const [highScore] = useState(high);
   const [guess, setGuess] = useState("");
-  const [centreLetter] = useState(centre);
   const [correctCount, setCorrectCount] = useState(0);
+
+  function onGuessKeyPress (event) {
+    setGuess(event.target.value);
+  }
+
+  useEffect(() => {
+    setCorrectCount(0)
+  }, [word]);
 
   const [error, setError] = useState(null);
 
@@ -27,32 +29,34 @@ const Guess = ({
     return acc[curr] ? ++acc[curr] : (acc[curr] = 1), acc;
   }, {});
 
-  function handleClick(event) {
+  function handleGuessSubmit(event) {
+    event.preventDefault();
     const isValid = isValidGuess();
+
     if (isValid) {
-      onChildClick(document.getElementById("guessedWord").value);
+      onChildClick(guess);
+      setGuess("");
     }
   }
 
   const isValidGuess = () => {
-    const guessInput = document.getElementById("guessedWord").value;
-    if (guessInput.length < 4 || guessInput.length > 10) {
+    if (guess.length < 4 || guess.length > 10) {
       setError("Words must be between 4 and 9 letters long");
       return false;
     }
-    if (!guessInput.includes(centreLetter)) {
+    if (!guess.includes(centre)) {
       setError("Words must contain the centre letter");
       return false;
     }
 
-    for (let character of guessInput) {
+    for (let character of guess) {
       if (!word.includes(character)) {
         setError("Words must only contain letters in the grid");
         return false;
       }
     }
 
-    const wordCharCounts = guessInput.split("").reduce(function (acc, curr) {
+    const wordCharCounts = guess.split("").reduce(function (acc, curr) {
       return acc[curr] ? ++acc[curr] : (acc[curr] = 1), acc;
     }, {});
 
@@ -65,16 +69,16 @@ const Guess = ({
       }
     }
 
-    if (possibleWordList.indexOf(guessInput) === -1) {
-      setError(`${guessInput} is not a valid word`);
+    if (wordList.indexOf(guess) === -1) {
+      setError(`${guess} is not a valid word`);
       return false;
     }
 
-    if (correctWords.indexOf(guessInput) !== -1) {
+    if (correctWords.indexOf(guess) !== -1) {
       return false;
     }
 
-    setGuess(guessInput);
+    setGuess(guess);
     // setCorrectWords([guessInput, ...correctWords]);
     setError(null);
     setCorrectCount(correctCount + 1);
@@ -93,38 +97,42 @@ const Guess = ({
         </div>
       )}
       <div className="row">
-        <div className="input-group mb-3">
-          <input
-            type="text"
-            className="form-control"
-            id="guessedWord"
-            placeholder="Guess a word"
-            aria-describedby="button-addon2"
-          ></input>
-          <button
-            className="btn btn-outline-secondary"
-            type="button"
-            id="button-addon2"
-            onClick={handleClick}
-          >
-            Guess
-          </button>
-        </div>
+        <form onSubmit={handleGuessSubmit}>
+          <div className="input-group mb-3">
+            <input
+              type="text"
+              className="form-control"
+              id="guessedWord"
+              placeholder="Guess a word"
+              aria-describedby="button-addon2"
+              autoComplete="off"
+              value={guess}
+              onChange={onGuessKeyPress}
+            />
+            <button
+              className="btn btn-outline-secondary"
+              type="submit"
+              id="button-addon2"
+            >
+              Guess
+            </button>
+          </div>
+        </form>
       </div>
       <div className="row">
         <div className="col">
           <ul className="list-group list-group-horizontal">
-            <li className="list-group-item">😐 {minScore}</li>
+            <li className="list-group-item">😐 {min}</li>
           </ul>
         </div>
         <div className="col">
           <ul className="list-group list-group-horizontal">
-            <li className="list-group-item">😎 {averageScore}</li>
+            <li className="list-group-item">😎 {avg}</li>
           </ul>
         </div>
         <div className="col">
           <ul className="list-group list-group-horizontal">
-            <li className="list-group-item">🥳 {highScore}</li>
+            <li className="list-group-item">🥳 {high}</li>
           </ul>
         </div>
       </div>
