@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 import { possibleWords, shuffleWord } from "../helpers/wordFuncs";
 
@@ -7,44 +7,29 @@ import useAllWords from "../hooks/useAllWords";
 import Guess from "./Guess";
 import Square from "./Square";
 const Game = ({ word }) => {
-  const isMounted = useRef(false);
-  const [correctWords, setCorrectWords] = useState([]);
   const wordList = useAllWords();
 
+  const [initialLoad, setInitialLoad] = useState(true);
+  const [correctWords, setCorrectWords] = useState([]);
   const [shuffledWord, setShuffledWord] = useState(shuffleWord(word));
   const [centreLetter, setCentreLetter] = useState(shuffledWord[4]);
+  const [possibleWordList, setPossibleWordList] = useState(possibleWords(shuffledWord, wordList));
 
   useEffect(() => {
-    if (!isMounted.current) {
-      isMounted.current = true;
-    } else {
-      setShuffledWord(shuffleWord(word));
+    if (initialLoad) {
+      setInitialLoad(false);
+      return;
     }
-  }, [word]);
 
-  const [possibleWordList, setPossibleWordList] = useState(
-    possibleWords(shuffledWord, wordList)
-  );
+    const newShuffledWord = shuffleWord(word);
+    setShuffledWord(newShuffledWord);
+    setPossibleWordList(possibleWords(newShuffledWord, wordList));
+    setCentreLetter(newShuffledWord[4]);
+  }, [word]);
 
   function handleChildClick(word) {
     setCorrectWords([...correctWords, word]);
   }
-
-  useEffect(() => {
-    if (!isMounted.current) {
-      isMounted.current = true;
-    } else {
-      setPossibleWordList(possibleWords(shuffledWord, wordList));
-    }
-  }, [shuffledWord]);
-
-  useEffect(() => {
-    if (!isMounted.current) {
-      isMounted.current = true;
-    } else {
-      setCentreLetter(shuffledWord[4]);
-    }
-  }, [shuffledWord]);
 
   const possibleWordCount = possibleWordList.length;
   const minScore = Math.floor(possibleWordCount * 0.2);
