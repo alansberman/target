@@ -4,51 +4,47 @@ import { useState, useEffect } from "react";
 import useAllWords from "../hooks/useAllWords";
 import Guess from "./Guess";
 import Square from "./Square";
+
+
+const shuffleWord = (word) => {
+  let w = word.split("");
+
+  for (let i = w.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    let tmp = w[i];
+    w[i] = w[j];
+    w[j] = tmp;
+  }
+  return w;
+};
+
 const Game = ({ word }) => {
+  const [initialLoad, setInitialLoad] = useState(true);
   const [targetWord, setTargetWord] = useState(word);
   const [correctWords, setCorrectWords] = useState([]);
-  const [randomSeed, setRandomSeed] = useState(0);
-  const wordList = useAllWords();
-
-  // thanks to https://stackoverflow.com/questions/3943772/how-do-i-shuffle-the-characters-in-a-string-in-javascript
-  const shuffleWord = () => {
-    let w = targetWord.split("");
-
-    for (let i = w.length - 1; i > 0; i--) {
-      let j = Math.floor(randomSeed * (i + 1));
-      let tmp = w[i];
-      w[i] = w[j];
-      w[j] = tmp;
-    }
-    return w;
-  };
-
-  const [shuffledWord, setShuffleWord] = useState(shuffleWord());
-
+  const [shuffledWord, setShuffleWord] = useState(shuffleWord(word));
   const [firstThree, setFirstThree] = useState(shuffledWord.slice(0, 3));
   const [middleThree, setMiddleThree] = useState(shuffledWord.slice(3, 6));
   const [centreLetter, setCentreLetter] = useState(middleThree[1]);
   const [lastThree, setLastThree] = useState(shuffledWord.slice(6, 9));
+  const wordList = useAllWords();
 
   useEffect(() => {
+    if (initialLoad) {
+      setInitialLoad(false);
+      return;
+    }
+
+    const shuffledWord = shuffleWord(word)
+
     setTargetWord(word);
-  }, [word])
-
-  useEffect(() => {
-    setRandomSeed(Math.random());
-  }, [targetWord])
-
-  useEffect(() => {
-    setShuffleWord(shuffleWord());
-  }, [randomSeed])
-
-  useEffect(() => {
+    setShuffleWord(shuffledWord);
     setFirstThree(shuffledWord.slice(0, 3));
     setMiddleThree(shuffledWord.slice(3, 6));
     setLastThree(shuffledWord.slice(6, 9));
     setCentreLetter(middleThree[1]);
     setCorrectWords([]);
-  }, [shuffledWord]);
+  }, [word])
 
   const possibleWords = () => {
     // thanks to https://stackoverflow.com/questions/5667888/counting-the-occurrences-frequency-of-array-elements
@@ -113,7 +109,7 @@ const Game = ({ word }) => {
           return (
             <div className="col" key={`${item}${index}`}>
               <Square
-                isCenterLetter={index === 1 ? true : false}
+                isCenterLetter={index === 1}
                 letter={item}
               />
             </div>
